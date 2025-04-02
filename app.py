@@ -4,7 +4,7 @@ import asyncio
 import os
 import re
 from dotenv import load_dotenv
-
+import time
 from src.Agents.agents import qa_agent 
 
 from browser_use import Browser, Agent as BrowserAgent
@@ -23,6 +23,14 @@ from src.Prompts.agno_prompts import (
 from src.Prompts.browser_prompts import (
     generate_browser_task
 )
+
+# Import website discovery utilities
+from src.Utilities.website_discovery import (
+    discover_website_structure,
+    identify_features,
+    generate_scenarios_from_features
+)
+
 # Load environment variables
 load_dotenv()
 
@@ -60,7 +68,7 @@ framework_descriptions = {
 
 def main():
 
-    st.set_page_config(page_title="SDET-GENIE", layout="wide")
+    st.set_page_config(page_title="AI QA Automation", layout="wide")
 
     # Apply custom CSS
     st.markdown("""
@@ -294,39 +302,29 @@ def main():
     """, unsafe_allow_html=True)
 
     # Custom Header
-    st.markdown('<div class="header fade-in"><span class="header-item">AI Agents powered by AGNO and BROWSER-USE</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header fade-in"><span class="header-item">AI-Powered QA Automation</span></div>', unsafe_allow_html=True)
     
     # Main Title with custom styling
-    st.markdown('<h1 class="main-title fade-in">SDET - GENIE</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle fade-in">User Stories to Automated Tests : The Future of QA Automation using AI Agents</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title fade-in">QA Automation Studio</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle fade-in">Transform User Stories into Automated Tests with AI</p>', unsafe_allow_html=True)
     # Sidebar styling
     with st.sidebar:
-        st.markdown('<div class="sidebar-heading"><a href="https://www.waigenie.tech/" target="_blank" style="color: white; text-decoration: none;">WAIGENIE</a></div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="sidebar-heading">Avilable Frameworks</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-heading">Available Frameworks</div>', unsafe_allow_html=True)
         selected_framework = st.selectbox(
             "Select framework:", 
             list(FRAMEWORK_GENERATORS.keys()),
             index=0
         )
-        # New About WaiGenie section with tabs
-        with st.expander("About WaiGenie"):
-            tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                "Vision & Mission", 
+        
+        # Framework information section with tabs
+        with st.expander("Framework Information"):
+            tab1, tab2, tab3 = st.tabs([
                 "Features", 
                 "How It Works",
-                "Workflow",
-                "Benefits"
+                "Workflow"
             ])
             
             with tab1:
-                st.subheader("Our Vision")
-                st.write("Revolutionizing Quality Assurance with AI-powered solutions that empower teams to deliver flawless software at unprecedented speeds.")
-                
-                st.subheader("Our Mission")
-                st.write("Empower QA teams with cutting-edge AI solutions tailored for enterprise needs, enabling them to deliver high-quality software faster and more efficiently than ever before.")
-            
-            with tab2:
                 st.markdown("#### 🧠 AI-Powered Test Generation")
                 st.write("Generate comprehensive test scenarios using advanced AI algorithms.")
                 st.markdown("#### 🔍 Intelligent Element Inspector")
@@ -337,36 +335,34 @@ def main():
                 st.write("Generate test automation scripts in multiple languages automatically.")
                 st.markdown("#### 🤖 Web Agent Explorer")
                 st.write("Leverage AI to automatically explore and test complex user journeys.")
-                st.markdown("#### 📊 Advanced Analytics")
-                st.write("Gain insights into your testing processes and identify areas for improvement.")
             
-            with tab3:
+            with tab2:
                 col1, col2 = st.columns([1, 5])
                 with col1:
                     st.markdown("### 1")
                 with col2:
-                    st.markdown("#### Sign Up")
-                    st.write("Create your WaiGenie account and set up your organization profile.")
+                    st.markdown("#### Define")
+                    st.write("Provide your user story for the application under test.")
                 col1, col2 = st.columns([1, 5])
                 with col1:
                     st.markdown("### 2")
                 with col2:
-                    st.markdown("#### Connect")
-                    st.write("Integrate WaiGenie with your existing QA tools and workflows.")
+                    st.markdown("#### Generate")
+                    st.write("AI generates Gherkin scenarios based on your user story.")
                 col1, col2 = st.columns([1, 5])
                 with col1:
                     st.markdown("### 3")
                 with col2:
-                    st.markdown("#### Analyze")
-                    st.write("Let our AI analyze your application and generate test scenarios.")
+                    st.markdown("#### Execute")
+                    st.write("The browser agent executes and analyzes the test scenarios.")
                 col1, col2 = st.columns([1, 5])
                 with col1:
                     st.markdown("### 4")
                 with col2:
-                    st.markdown("#### Optimize")
-                    st.write("Continuously improve your QA process with AI-driven insights.")
+                    st.markdown("#### Create")
+                    st.write("Generate automation code in your chosen framework.")
             
-            with tab4:
+            with tab3:
                 st.subheader("AI-Powered QA Workflow")
                 st.markdown("#### 1. QA Agent")
                 st.write("• Converts user stories into Gherkin scenarios")
@@ -379,57 +375,56 @@ def main():
                 st.write("• Transforms scenarios into automation scripts")
                 st.write("• Includes necessary imports and dependencies")
                 st.write("• Handles errors and provides helper functions")
-            
-            with tab5:
-                st.write("• 90% reduction in time-to-test")
-                st.write("• Enhanced test coverage")
-                st.write("• Consistent code implementation")
-                st.write("• Lower maintenance overhead")
-                st.write("• Bridges skill gaps")
-                st.write("• Preserves testing knowledge")
-            # Add contact button and separator
-            st.markdown("---")
-            email = "richardsongunde@waigenie.tech"
-            gmail_link = f"https://mail.google.com/mail/?view=cm&fs=1&to={email}"
-            st.markdown(
-                f'<a href="{gmail_link}" target="_blank"><button style="width: 100%; background: linear-gradient(90deg, #6A0572, #240046); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Contact Us</button></a>',
-                unsafe_allow_html=True
-            )
-            # Add logo and branding at the bottom
-            st.markdown("""
-            <div style="text-align: center; margin-top: 30px;">
-                <img src="https://www.waigenie.tech/logo.png" style="width: 96px; height: auto; margin-bottom: 10px;">
-                <img src="https://www.waigenie.tech/logotext.svg" style="width: 180px; height: auto; display: block; margin: 0 auto;">
-                <p style="font-size: 0.75rem; color: #E6E6FA; margin-top: 10px;">© 2025 www.waigenie.tech. All rights reserved.</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # Add YouTube demo button
-        youtube_url = "https://youtu.be/qH30GvQebqg?feature=shared"
-        st.markdown(
-            f'<a href="{youtube_url}" target="_blank"><button style="width: 100%; background: linear-gradient(90deg, #FF0000, #CC0000); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">▶️ YouTube Demo</button></a>',
-            unsafe_allow_html=True
-        )
     
     # Main content area with card styling
     st.markdown('<div class="card fade-in">', unsafe_allow_html=True)
-    st.markdown('<h3 class="glow-text">Enter User Story</h3>', unsafe_allow_html=True)
-    user_story = st.text_area(
-        "",
-        placeholder="e.g., As a user, I want to log in with valid credentials so that I can access my account."
-    )
+    
+    # Create tabs for different input methods
+    input_tab1, input_tab2 = st.tabs(["User Story Input", "Website URL Input"])
+    
+    with input_tab1:
+        st.markdown('<h3 class="glow-text">Enter User Story</h3>', unsafe_allow_html=True)
+        user_story = st.text_area(
+            label="User Story Input",
+            value="",
+            placeholder="e.g., As a user, I want to log in with valid credentials so that I can access my account.",
+            label_visibility="collapsed"
+        )
+    
+    with input_tab2:
+        st.markdown('<h3 class="glow-text">Enter Website URL</h3>', unsafe_allow_html=True)
+        start_url = st.text_input(
+            label="Starting URL",
+            value="",
+            placeholder="e.g., https://example.com",
+            help="Enter the website URL to automatically generate scenarios from website structure"
+        )
+        
+        # Add a slider for crawl depth
+        max_depth = st.slider(
+            "Crawl Depth (more pages = more time)",
+            min_value=1,
+            max_value=3,
+            value=1,
+            help="How many levels of links to follow from the homepage"
+        )
+    
     st.markdown('</div>', unsafe_allow_html=True)
+
     # Buttons with better layout
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        generate_btn = st.button("🔍 Generate Gherkin")
+        generate_btn = st.button("🔍 Generate from Story")
     with col2:
-        execute_btn = st.button("▶️ Execute Steps")
+        discover_btn = st.button("🌐 Discover Website")
     with col3:
+        execute_btn = st.button("▶️ Execute Steps")
+    with col4:
         generate_code_btn = st.button("💻 Generate Code")
-    # Gherkin Generation Section
+
+    # Gherkin Generation from User Story Section
     if generate_btn and user_story:
-        with st.spinner("Generating Gherkin scenarios..."):
+        with st.spinner("Generating Gherkin scenarios from user story..."):
             prompt = generate_gherkin_scenarios(user_story)
             run_response = qa_agent.run(prompt)
             generated_steps = run_response.content
@@ -440,6 +435,126 @@ def main():
             
             st.markdown('<div class="status-success fade-in">Gherkin scenarios generated successfully!</div>', unsafe_allow_html=True)
     
+    # NEW SECTION: Website Discovery and Gherkin Generation
+    if discover_btn and start_url:
+        with st.spinner("Discovering website structure and generating scenarios..."):
+            # Progress bar
+            progress = st.progress(0)
+            progress_text = st.empty()
+            status_box = st.empty()
+            
+            # Step 1: Website Discovery
+            progress_text.text("Step 1/3: Crawling website structure...")
+            status_box.info("This may take a few minutes depending on website size and depth setting")
+            
+            start_time = time.time()
+            
+            try:
+                # Use asyncio to run the discovery process
+                discovered_pages, navigation_map = asyncio.run(
+                    discover_website_structure(start_url, max_depth=max_depth)
+                )
+                progress.progress(33)
+                page_count = len(discovered_pages)
+                if page_count == 0:
+                    st.error(f"Could not discover any pages at {start_url}. Please check the URL and try again.")
+                    st.stop()
+                
+                status_box.success(f"Found {page_count} pages in {time.time() - start_time:.1f} seconds")
+                
+                # Step 2: Feature Identification
+                progress_text.text("Step 2/3: Identifying website features...")
+                status_box.info("AI is analyzing page structure to identify features")
+                feature_start_time = time.time()
+                
+                # Process pages one at a time for better feature identification
+                all_features = []
+                
+                for i, url in enumerate(discovered_pages.keys()):
+                    chunk_pages = {url: discovered_pages[url]}
+                    chunk_nav = {target: info for target, info in navigation_map.items() if info["from"] == url or target == url}
+                    
+                    chunk_features = identify_features(chunk_pages, chunk_nav, qa_agent)
+                    all_features.extend(chunk_features)
+                    
+                    # Update progress
+                    chunk_progress = 33 + (33 * (i + 1) / len(discovered_pages))
+                    progress.progress(int(chunk_progress))
+                    feature_count = len(chunk_features)
+                    status_box.info(f"Analyzed {feature_count} features for page {i+1}/{len(discovered_pages)}: {url}")
+                
+                status_box.success(f"Identified {len(all_features)} total features in {time.time() - feature_start_time:.1f} seconds")
+                
+                # Step 3: Scenario Generation
+                progress_text.text("Step 3/3: Generating comprehensive test scenarios...")
+                status_box.info("Creating detailed Gherkin scenarios based on features (this may take some time)")
+                scenario_start_time = time.time()
+                
+                generated_steps = generate_scenarios_from_features(all_features, navigation_map, qa_agent)
+                progress.progress(100)
+                
+                # Store results in session state
+                st.session_state.discovered_pages = discovered_pages
+                st.session_state.navigation_map = navigation_map
+                st.session_state.all_features = all_features
+                st.session_state.generated_steps = generated_steps
+                st.session_state.edited_steps = generated_steps
+                
+                # Calculate elapsed time
+                elapsed_time = time.time() - start_time
+                
+                # Count scenarios
+                scenario_count = len(generated_steps.split("Scenario:")) - 1
+                
+                status_box.success(f"Generated {scenario_count} scenarios in {time.time() - scenario_start_time:.1f} seconds")
+                st.markdown(f'<div class="status-success fade-in">Website analyzed and {scenario_count} scenarios generated successfully in {elapsed_time:.1f} seconds!</div>', unsafe_allow_html=True)
+                
+                # Display stats
+                st.markdown("### Discovery Statistics")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Pages Found", len(discovered_pages))
+                with col2:
+                    st.metric("Features Identified", len(all_features))
+                with col3:
+                    st.metric("Scenarios Generated", scenario_count)
+                
+                # Show sample of discovered content
+                with st.expander("View Website Structure Details"):
+                    # Show a summary of discovered pages
+                    st.markdown("#### Discovered Pages")
+                    page_df_data = []
+                    for url, data in discovered_pages.items():
+                        page_df_data.append({
+                            "URL": url,
+                            "Title": data.get("title", "Unknown"),
+                            "Elements": len(data.get("elements", [])),
+                            "Forms": len(data.get("forms", []))
+                        })
+                    
+                    import pandas as pd
+                    if page_df_data:
+                        st.dataframe(pd.DataFrame(page_df_data))
+
+                    # Show summary of features
+                    st.markdown("#### Identified Features")
+                    feature_df_data = []
+                    for feature in all_features:
+                        feature_df_data.append({
+                            "Page": feature.get("page_title", "Unknown"),
+                            "Feature": feature.get("name", "Unnamed"),
+                            "Type": feature.get("type", "Unknown"),
+                            "Description": feature.get("description", "")
+                        })
+                    
+                    if feature_df_data:
+                        st.dataframe(pd.DataFrame(feature_df_data))
+                
+            except Exception as e:
+                st.error(f"Error during website discovery: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
+                
     # Display scenarios editor (whether newly generated or from session state)
     if "edited_steps" in st.session_state:
         st.markdown('<div class="card code-container fade-in">', unsafe_allow_html=True)
@@ -447,10 +562,11 @@ def main():
         
         # Display editable text area with the current edited steps
         edited_steps = st.text_area(
-            "Edit scenarios if needed:", 
+            label="Gherkin Scenarios Editor",
             value=st.session_state.edited_steps, 
             height=300, 
-            key="scenario_editor"
+            key="scenario_editor",
+            label_visibility="collapsed"
         )
         
         # Add a save button and show status
@@ -481,10 +597,11 @@ def main():
         
         # Display editable text area with the current edited steps
         edited_steps = st.text_area(
-            "Edit scenarios if needed:", 
+            label="Gherkin Scenarios Editor",
             value=st.session_state.edited_steps, 
             height=300, 
-            key="scenario_editor"
+            key="scenario_editor",
+            label_visibility="collapsed"
         )
         
         # Add a save button and show status
@@ -552,7 +669,11 @@ def main():
                         for scenario in scenarios:
                             browser_agent = BrowserAgent(
                                 task=generate_browser_task(scenario),
-                                llm=ChatOpenAI(model='gpt-4o-mini', api_key=os.environ.get("OPENAI_API_KEY")),
+                                llm=ChatOpenAI(
+                                    model='gpt-4o',  # Using gpt-4 for better accuracy/speed balance
+                                    temperature=0.2,  # Lower temperature for more consistent responses
+                                    api_key=os.environ.get("OPENAI_API_KEY")
+                                ),
                                 browser=browser,
                                 controller=controller,
                             )
@@ -759,9 +880,6 @@ def main():
                     
                 except Exception as e:
                     st.markdown(f'<div class="status-error">Error generating {selected_framework} code: {str(e)}</div>', unsafe_allow_html=True)
-    
-    # Footer
-    st.markdown('<div class="footer fade-in">© 2024 www.waigenie.tech | AI-Powered Test Automation</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

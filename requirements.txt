@@ -7,3 +7,7 @@ langchain-google-genai
 langchain-openai
 langchain-anthropic
 langchain-groq
+playwright
+beautifulsoup4
+aiohttp
+python-dotenv
